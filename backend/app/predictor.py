@@ -121,3 +121,65 @@ def compute_suggested_price(predicted_price: float, damage_cost: float) -> float
     floor_price = predicted_price * 0.72
     suggested = predicted_price - damage_cost
     return round(max(suggested, floor_price), 2)
+
+
+def calculate_transaction_price(predicted_price: float, damage_cost: float, transaction_type: str) -> dict:
+    """
+    Calculate transaction-specific pricing based on transaction type.
+    
+    Parameters
+    ----------
+    predicted_price : float
+        Base predicted market value
+    damage_cost : float
+        Estimated damage repair cost
+    transaction_type : str
+        One of: "selling", "buying_resale", "buying_personal"
+    
+    Returns
+    -------
+    dict with transaction_price, profit_margin, price_range_min, price_range_max
+    """
+    market_value = predicted_price - damage_cost
+    floor_price = predicted_price * 0.72
+    market_value = max(market_value, floor_price)
+    
+    if transaction_type == "selling":
+        # Selling mode: show suggested selling price
+        return {
+            "transaction_price": round(market_value, 2),
+            "profit_margin": None,
+            "price_range_min": None,
+            "price_range_max": None
+        }
+    
+    elif transaction_type == "buying_resale":
+        # Buying for resale: calculate max buy price for 10% profit margin
+        max_buy_price = market_value / 1.10
+        profit_amount = market_value - max_buy_price
+        return {
+            "transaction_price": round(max_buy_price, 2),
+            "profit_margin": round(profit_amount, 2),
+            "price_range_min": round(max_buy_price * 0.95, 2),  # 5% negotiation room
+            "price_range_max": round(max_buy_price, 2)
+        }
+    
+    elif transaction_type == "buying_personal":
+        # Buying for personal use: show fair market value range
+        fair_min = market_value * 0.92  # 8% below market
+        fair_max = market_value * 1.03  # 3% above market
+        return {
+            "transaction_price": round(market_value, 2),
+            "profit_margin": None,
+            "price_range_min": round(fair_min, 2),
+            "price_range_max": round(fair_max, 2)
+        }
+    
+    else:
+        # Default to selling
+        return {
+            "transaction_price": round(market_value, 2),
+            "profit_margin": None,
+            "price_range_min": None,
+            "price_range_max": None
+        }

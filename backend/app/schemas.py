@@ -29,6 +29,8 @@ class VehicleInput(BaseModel):
 
     damage_description: str | None = None
 
+    transaction_type: str = "selling"  # "selling", "buying_resale", "buying_personal"
+
 
 class PredictionResponse(BaseModel):
 
@@ -45,6 +47,16 @@ class PredictionResponse(BaseModel):
     model_version: str
 
     status: str
+
+    transaction_type: str
+
+    transaction_price: float
+
+    profit_margin: float | None = None
+
+    price_range_min: float | None = None
+
+    price_range_max: float | None = None
 
 
 class PredictionHistoryItem(BaseModel):

@@ -22,6 +22,7 @@ from backend.app.predictor import (
     estimate_damage_cost,
     calculate_confidence_score,
     compute_suggested_price,
+    calculate_transaction_price,
 )
 from backend.app.schemas import (
     AppMetadata,
@@ -87,6 +88,11 @@ def predict(vehicle: VehicleInput):
     damage_cost = estimate_damage_cost(payload.get("damage_description"))
     confidence_score = calculate_confidence_score(payload)
     suggested_price = compute_suggested_price(price, damage_cost)
+    
+    # Calculate transaction-specific pricing
+    transaction_type = payload.get("transaction_type", "selling")
+    transaction_data = calculate_transaction_price(price, damage_cost, transaction_type)
+    
     record_prediction(db_connection, payload, price)
 
     return {
@@ -97,6 +103,11 @@ def predict(vehicle: VehicleInput):
         "currency": "INR",
         "model_version": MODEL_VERSION,
         "status": "success",
+        "transaction_type": transaction_type,
+        "transaction_price": transaction_data["transaction_price"],
+        "profit_margin": transaction_data["profit_margin"],
+        "price_range_min": transaction_data["price_range_min"],
+        "price_range_max": transaction_data["price_range_max"],
     }
 
 @app.get("/history", response_model=list[PredictionHistoryItem])
